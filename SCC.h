@@ -145,7 +145,6 @@ void UpdateFeature( double **Wd, double *sample, double *residuals, double *feat
         		}
 		}
 	}
-
 	nonZeroIndex.resize(0);
 	for ( unsigned int i = 0; i < count_D; i++ ){
 		if( feature[i]!=0 )
@@ -272,15 +271,73 @@ double calculateError(  double **Wd,  double **sample, double **feature, double 
 //////////////////////
 ///////////////
 ///////////
-void trainDecoder( double **mtx2D_D, double **mtx2D_F, double **mtx2D_input, double double_lambda, int count_layers, int count_D, int count_F, int length_D, int count_iteration, bool ifNonNegative, char* file_summary, double double_stopping, double lambda2, double **mtx2D_DP, int length_DP)
+double trainDecoder(double* A,double* A_Copy,double* residuals,std::vector<int> *nonZeroIndex , double **mtx2D_D, double **mtx2D_F, double **mtx2D_input, double double_lambda, int count_layers, int count_D, int count_F, int length_D, int count_iteration, bool ifNonNegative, char* file_summary, double double_stopping, double lambda2, double **mtx2D_DP, int length_DP)
 {
-	double *residuals = (double*)malloc(length_D*sizeof(double));
+	/*double *residuals = (double*)malloc(length_D*sizeof(double));
 	double *A = Initialize_A( count_D );
 	double *A_Copy = Initialize_A_Copy( count_D );
-	std::vector<int> *nonZeroIndex = NonZeroIndexInitialization( count_F );
+	std::vector<int> *nonZeroIndex = NonZeroIndexInitialization( count_F );*/
 
-	FILE *fp;
-	fp = fopen( file_summary, "w");
+	//FILE *fp;
+	//fp = fopen( file_summary, "w");
+	srand((unsigned)time(0));
+	myseed = (unsigned int) RAND_MAX * rand();	
+
+	std::cout<<"Train decoder"<<std::endl;				
+	double ComputionalTime = 0;
+	double BeginTime = omp_get_wtime();  
+	double double_errornew = 0;
+	double double_errorold = 1;
+	for( unsigned int it=0; it<count_iteration; it++ )
+	{
+		int index = it%count_F;
+		if( index==0 )
+		{
+		Initialize_A( A, A_Copy, count_D );
+		double_errornew = calculateError( mtx2D_D, mtx2D_input, mtx2D_F, double_lambda, count_F, length_D, count_D );
+		//fprintf(fp, "%.15lf ", double_errornew);
+		if ((getAbs(double_errornew-double_errorold)/double_errorold)<double_stopping)
+		{
+			break;
+		}
+		double_errorold = double_errornew;
+		
+		}
+		UpdateWd( mtx2D_D, residuals, mtx2D_F[index], A, nonZeroIndex[index], length_D, (it+1), lambda2, mtx2D_DP, length_DP);
+		NormalizeWd( mtx2D_D, nonZeroIndex[index], length_D ); 
+		UpdateFeature( mtx2D_D, mtx2D_input[index], residuals, mtx2D_F[index], nonZeroIndex[index], double_lambda, count_layers, count_D, length_D, ifNonNegative );
+		Update_A( A, A_Copy, mtx2D_F[index], nonZeroIndex[index] );
+		
+		if( it%10000==0 )
+		{
+			std::cout<<it+1<<" iterations finished"<<std::endl;
+		}
+		
+		
+	}
+	double EndTime = omp_get_wtime();  	
+	ComputionalTime += (EndTime-BeginTime);
+	//fprintf(fp, "\n %f", ComputionalTime);
+
+   	std::cout<<"Finish decoding process:"<<std::endl;
+	std::cout<<"Train Decode Time is "<<ComputionalTime<<" seconds."<<std::endl;
+	/*free(A_Copy);
+	free(residuals);
+	delete [] nonZeroIndex;*/
+	//fclose(fp);
+	return double_errornew;
+}
+//////////////////////////////////////
+///////////////////////////////predifineZ°æ
+void trainDecoderPredefineZ(double* A,double* A_Copy,double* residuals,std::vector<int> *nonZeroIndex , double **mtx2D_D, double **mtx2D_F, double **mtx2D_input, double double_lambda, int count_layers, int count_D, int count_F, int length_D, int count_iteration, bool ifNonNegative, char* file_summary, double double_stopping, double lambda2, double **mtx2D_DP, int length_DP)
+{
+	/*double *residuals = (double*)malloc(length_D*sizeof(double));
+	double *A = Initialize_A( count_D );
+	double *A_Copy = Initialize_A_Copy( count_D );
+	std::vector<int> *nonZeroIndex = NonZeroIndexInitialization( count_F );*/
+
+	//FILE *fp;
+	//fp = fopen( file_summary, "w");
 	srand((unsigned)time(0));
 	myseed = (unsigned int) RAND_MAX * rand();	
 
@@ -296,37 +353,37 @@ void trainDecoder( double **mtx2D_D, double **mtx2D_F, double **mtx2D_input, dou
 		{
 		Initialize_A( A, A_Copy, count_D );
 		double_errorNew = calculateError( mtx2D_D, mtx2D_input, mtx2D_F, double_lambda, count_F, length_D, count_D );
-		fprintf(fp, "%.15lf ", double_errorNew);
+		//fprintf(fp, "%.15lf ", double_errorNew);
 		if ((getAbs(double_errorNew-double_errorOld)/double_errorOld)<double_stopping)
 		{
 			break;
 		}
 		double_errorOld = double_errorNew;
 		}
-		UpdateFeature( mtx2D_D, mtx2D_input[index], residuals, mtx2D_F[index], nonZeroIndex[index], double_lambda, count_layers, count_D, length_D, ifNonNegative );
+		//UpdateFeature( mtx2D_D, mtx2D_input[index], residuals, mtx2D_F[index], nonZeroIndex[index], double_lambda, count_layers, count_D, length_D, ifNonNegative );
 		Update_A( A, A_Copy, mtx2D_F[index], nonZeroIndex[index] );
 		UpdateWd( mtx2D_D, residuals, mtx2D_F[index], A, nonZeroIndex[index], length_D, (it+1), lambda2, mtx2D_DP, length_DP);
 		NormalizeWd( mtx2D_D, nonZeroIndex[index], length_D ); 
-		/*	if( it%10000==0 )
+		if( it%10000==0 )
 		{
-		std::cout<<it+1<<" iterations finished"<<std::endl;
-		}*/
+			std::cout<<it+1<<" iterations finished"<<std::endl;
+		}
 		
 		
 	}
 	double EndTime = omp_get_wtime();  	
 	ComputionalTime += (EndTime-BeginTime);
-	fprintf(fp, "\n %f", ComputionalTime);
+	//fprintf(fp, "\n %f", ComputionalTime);
 
    	std::cout<<"Finish decoding process:"<<std::endl;
 	std::cout<<"Train Decode Time is "<<ComputionalTime<<" seconds."<<std::endl;
-	free(A_Copy);
+	/*free(A_Copy);
 	free(residuals);
-	delete [] nonZeroIndex;
-	fclose(fp);
+	delete [] nonZeroIndex;*/
+	//fclose(fp);
 }
-//////////////////////////////////////
-///////////////////////////////
+
+
 
 ///////////////////
 ///////////

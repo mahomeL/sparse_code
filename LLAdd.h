@@ -13,16 +13,14 @@ namespace dpl{
 	//	return Wd;	
 	//}
 
-void FeatureAvg(double** mtx2D_F_Avg,double** mtx2D_F,int count_D,int count_F){
+void FeatureAvg(double** mtx2D_F_Avg,double** mtx2D_F,int count_D,int count_F,int people){
 		
 		for( unsigned int i=0; i<count_F; i++ ){
 			for( unsigned int j=0; j<count_D; j++ )
-				mtx2D_F_Avg[i][j]+=(mtx2D_F[i][j])/3;
+				mtx2D_F_Avg[i][j]+=(mtx2D_F[i][j])/people;
 		}
 	}
 }
-
-
 
 #endif /*  learning rate */
 

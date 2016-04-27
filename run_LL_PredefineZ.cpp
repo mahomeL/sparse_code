@@ -76,21 +76,10 @@ int main(int argc, char* argv[])
 	char* file_summary = argv[10]; // including error and number of iterations;
 	double double_stopping = atof(argv[11]); // stopping criteria;
 	double double_lambda2 = atof(argv[12]); // balancing constant for enforced learning of mtx2D_M (increasing correlation to mtx2D_DP);
-	char* file_DP =argv[13]; //"predefinedD.txt" file_outputD_1 
+	char* file_DP =argv[13]; //用来提前初始化的特征Z
 	int length_DP =atoi(argv[14]);//   70                    5==14,2==13
 	bool ifInitialize =atoi(argv[15]);// 1;
 
-	//char* file_input_2 =argv[16];// "1.WM.sig.txt";
-	//char* file_outputD_2 =argv[17]; //"Dictionary.txt";
-
-	//char* file_input_3 =argv[18];// "1.WM.sig.txt";
-	//char* file_outputD_3 =argv[19]; //"Dictionary.txt";
-
-	//char* file_input_4 =argv[20];// "1.WM.sig.txt";
-	//char* file_outputD_2 =argv[21]; //"Dictionary.txt";
-
-	//char* file_input_2 =argv[22];// "1.WM.sig.txt";
-	//char* file_outputD_2 =argv[23]; //"Dictionary.txt";
 
 	const int people=atoi(argv[16]); //总共训练的个体数
 	
@@ -141,7 +130,10 @@ int main(int argc, char* argv[])
 	for(int i=0;i<people;++i)
 		double_errorOld[i]=1;
 	 
-////////////////////////////////////////////////////////////////////////////////	
+/////////////////////////////////////////////////////////////////////////////////////	
+//Feature(count_d,count_f):new 32792*100的f*d，存的时候是100*32792的
+//Dictionary(count_D, length_D):new 70*100的lengthD*count_D,存是70*100
+/////////////////////////////////////////////////////////////////////////////////////
 	for(int inter=0;inter<count_epoch;++inter){
 
 		double **mtx2D_input;
@@ -157,6 +149,8 @@ int main(int argc, char* argv[])
 			mtx2D_input = dpl::ReadSample( file_input[sample], count_F, length_D );
 			dpl::SampleNormalization( mtx2D_input, count_F, length_D );
 	
+
+			//下面这段作用是，产生随机的D，然后用来初始化
 			if(inter==0){
 				
 				//std::cout<<"Begin to initialize dictionary..."<<std::endl;
@@ -169,14 +163,6 @@ int main(int argc, char* argv[])
 				mtx2D_DP = dpl::readDictionary(file_outputD[sample], count_D, length_D);
 				mtx2D_D=dpl::readDictionary(file_outputD[sample], count_D, length_D);
 			}
-
-		
-			
-			/*std::cout<<"Number of samples is "<<count_F<<std::endl;
-			std::cout<<"Length of samples is "<<length_D<<std::endl;
-			std::cout<<"Number of dictionaries is "<<count_D<<std::endl;
-			std::cout<<"lambda is "<<double_lambda<<std::endl;*/
-	
 			if(inter==0 && ifInitialize  )
 			{
 				std::cout<<"Use pre-defined dictionary for (partial) D initialization..."<<std::endl;
@@ -184,10 +170,14 @@ int main(int argc, char* argv[])
 			}
 			dpl::DictionaryNormalization( count_D, length_D, mtx2D_D );
 			dpl::DictionaryNormalization( count_D, length_D, mtx2D_DP );
-			//dpl::saveDictionary( count_D, length_D, mtx2D_D, file_generatedD);
+			////////////////////////////
 
-			if(inter==0)
+
+			if(inter==0){
+				std::cout<<"Begin to initialize Z..."<<std::endl;
 				mtx2D_F = dpl::FeatureInitialization( count_D, count_F);
+			   mtx2D_F = dpl::readFeature(file_DP,count_D,count_F);//读入的Feature为32792*100txt
+			}
 			else{
 				mtx2D_F = dpl::FeatureInitialization( count_D, count_F);
 				FeatureCopy(mtx2D_F,mtx2D_F_Avg,count_D,count_F);

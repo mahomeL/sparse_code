@@ -4,7 +4,6 @@
 namespace dpl{
 
 
-
 double **InitializeDictionary( int featureNumber, int sampleElementNumber ){
 
 	double **Wd = (double**)malloc(sampleElementNumber*sizeof(double*));	
@@ -73,23 +72,23 @@ double **readDictionary( char *FileName, int featureNumber, int sampleElementNum
 	return Wd;
 }
 //
-//////////////////////////////////////
-//double **readfeature( char *filename, int count_d, int count_f ) {
-//
-//	double **wd = featureinitialization( count_d, count_f);
-//	file *fp;
-//    	fp = fopen( filename, "r");
-//    	if( fp == null ){
-//		printf("could not find dictionary file %s\n", filename);
-//        	exit(0);
-//	}
-//    	for( unsigned int i=0; i<count_d; i++ ){
-//        	for( unsigned int j=0; j<count_f; j++)
-//	        	fscanf(fp, "%lf", &wd[i][j]);		
-//	}
-//	fclose(fp);
-//	return wd;
-//}
+////////////////////////////////////送入的Feature为32792*100的
+double **readFeature( char *filename, int count_d, int count_f ) {
+
+	double **wd = InitializeDictionary( count_d,count_f );
+	FILE *fp;
+    	fp = fopen( filename, "r");
+    	if( fp == NULL ){
+		printf("could not find dictionary file %s\n", filename);
+        	exit(0);
+	}
+    	for( unsigned int i=0; i<count_f; i++ ){
+        	for( unsigned int j=0; j<count_d; j++)
+	        	fscanf(fp, "%lf", &wd[i][j]);		
+	}
+	fclose(fp);
+	return wd;
+}
 
 void saveDictionary( int featureNumber, int sampleElementNumber, double **Wd, char *dictionaryName ){
 
